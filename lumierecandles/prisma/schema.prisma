@@ -1,0 +1,136 @@
+// Configuración del generador y la fuente de datos
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+// --- MODELOS DE USUARIO ---
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String
+  role          Role      @default(CUSTOMER)
+  reviews       Review[]
+  orders        Order[]
+  cart          Cart?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// --- MODELOS DE PRODUCTO ---
+
+model Product {
+  id              String               @id @default(cuid())
+  slug            String               @unique
+  price           Decimal              @db.Decimal(10, 2)
+  stock           Int                  @default(0)
+  aromaIntensity  Int                  // Escala 1-5
+  splineSceneUrl  String?
+  translations    ProductTranslation[]
+  category        Category?            @relation(fields: [categoryId], references: [id])
+  categoryId      String?
+  reviews         Review[]
+  orderItems      OrderItem[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model ProductTranslation {
+  id          String   @id @default(cuid())
+  language    Language // Enum: ES o EN
+  title       String
+  description String   @db.Text
+  scentNotes  String?  @db.Text
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+
+  @@unique([productId, language])
+}
+
+model Category {
+  id           String                @id @default(cuid())
+  slug         String                @unique
+  translations CategoryTranslation[]
+  products     Product[]
+}
+
+model CategoryTranslation {
+  id         String   @id @default(cuid())
+  language   Language
+  name       String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+
+  @@unique([categoryId, language])
+}
+
+// --- MODELOS DE TRANSACCIÓN ---
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id])
+  items     Json     // Estructura: [{productId, quantity}] para persistencia rápida
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  status           OrderStatus @default(PENDING)
+  total            Decimal     @db.Decimal(10, 2)
+  stripeSessionId  String?     @unique
+  user             User        @relation(fields: [userId], references: [id])
+  userId           String
+  items            OrderItem[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  priceAtPurchase Decimal @db.Decimal(10, 2)
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+}
+
+// --- SOCIAL PROOF ---
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?  @db.Text
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+}
+
+// --- ENUMS ---
+
+enum Language {
+  ES
+  EN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  SHIPPED
+}
