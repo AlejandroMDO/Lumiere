@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "../globals.css"; 
 
+
+// Layout
+import NavbarContainer from "@/components/layout/NavbarContainer";
+import FooterContainer from "@/components/layout/FooterContainer";
+
 const playfair = Playfair_Display({ 
   subsets: ["latin"],
   variable: "--font-playfair",
@@ -25,10 +30,14 @@ interface RootLayoutProps {
 }
 
 export default function RootLayout({ children, params }: RootLayoutProps) {
+  const currentLocale = params.locale === "en" ? "en" : "es";
+
   return (
     <html lang={params.locale} className={`${playfair.variable} ${inter.variable}`}>
       <body className="bg-lumiere-crema text-lumiere-cacao antialiased min-h-screen flex flex-col selection:bg-lumiere-arena/30">
+        <NavbarContainer currentLocale={currentLocale} />
         {children}
+        <FooterContainer currentLocale={currentLocale} />
       </body>
     </html>
   );

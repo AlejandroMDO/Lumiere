@@ -1,5 +1,5 @@
 // Models
-import HeroScene from "./Models/HeroScene"
+import HeroScene from "../Models/HeroScene"
 
 const Hero = () => {
   return (
