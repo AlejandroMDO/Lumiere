@@ -41,7 +41,7 @@ export default function Spline3DContainer() {
     >
       {/* Esqueleto de precarga sutil: Mantiene el color Crema de Lumière mientras WebGL levanta */}
       {!isSceneActive && (
-        <div className="absolute inset-0 bg-lumiere-crema z-10" />
+        <div className="absolute inset-0 bg-lumiere-ahumado z-10" />
       )}
       
       <HeroScene onLoad={handleSplineLoad} />
